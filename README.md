@@ -2,8 +2,32 @@
 
 > **Unofficial fork notice:** Opis is an independent fork of GenOffice. It is
 > not affiliated with, endorsed by, or sponsored by Mainfunc, Inc., GenOffice,
-> or Genspark. See [FORK-NOTICE.md](FORK-NOTICE.md) for attribution,
+> or Genspark. See [FORK-NOTICE.md](https://github.com/jonbuster/opis/blob/main/FORK-NOTICE.md) for attribution,
 > licensing, branding, and distribution requirements.
+
+## Configure a custom AI provider
+
+Opis includes a custom OpenAI-compatible provider so each user can supply their
+own endpoint, model, and API key without changing source code or environment
+variables.
+
+1. Open Opis.
+2. Select **Tools → AI Provider Settings…**.
+3. In **Base URL**, enter the provider's API root. Use a URL ending in `/v1`,
+   such as `https://api.neuralwatt.com/v1`. Do not add `/chat/completions`;
+   Opis adds that path automatically.
+4. In **Model**, enter the model identifier, such as `deepseek-v4-flash`.
+5. Paste the provider's API key into **API key**. Use **Show** to verify it if
+   needed, then select **Save settings**.
+
+The endpoint must support the OpenAI-compatible
+`POST /chat/completions` API with bearer-token authentication and streaming
+responses. New AI requests in Docs, Sheets, and Slides use the saved settings.
+
+The key is stored locally in the Electron user-data settings file. It is not
+written to the source tree or included in release artifacts by default. Treat
+it like a password, do not commit it, and review the provider's privacy terms
+before sending documents, attachments, or other sensitive content.
 
 An AI-native office suite for macOS and Windows: word processor, spreadsheet,
 presentations, PDF, and Markdown — six Electron apps sharing one engine layer,
