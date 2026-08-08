@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 /**
  * slides main-process <-> renderer IPC contract (Phase 3: open/save/edit, AI not included yet).
  *
@@ -1286,6 +1292,8 @@ export interface SlidesApi {
   onRenamed: (handler: (newPath: string) => void) => () => void
   getAiSettings: () => Promise<AiSettings>
   setAiSettings: (settings: AiSettings) => Promise<void>
+  /** settings changed in another window (for example the shell settings dialog) */
+  onAiSettingsChanged: (handler: () => void) => () => void
   aiStream: (request: AiStreamRequest) => Promise<void>
   aiStreamCancel: (requestId: string) => Promise<void>
   /** Genspark account status (gsk login state); with withEmail also fetches the email (needs a network request, slower) */

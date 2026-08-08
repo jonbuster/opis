@@ -1,11 +1,19 @@
+<!--
+MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+-->
+
 # Security Policy
 
 ## Reporting a Vulnerability
 
 Please report suspected vulnerabilities privately via GitHub's
-[private vulnerability reporting](https://github.com/genspark-ai/genoffice/security/advisories/new)
-on this repository. Do not open public issues for security reports. We aim to
-acknowledge reports within 72 hours.
+[private vulnerability reporting](https://github.com/jonbuster/opis/security/advisories/new)
+for this fork, if enabled. Do not report Opis vulnerabilities to the upstream
+GenOffice project or open public issues for security reports. The fork
+maintainer should update this section with a direct contact method and response
+target before publishing a production release.
 
 ## Process Security Posture
 
@@ -20,7 +28,15 @@ All application windows run with the full Electron renderer lockdown:
   enforces a protocol allowlist (http/https; pdf link annotations additionally
   allow mailto). `file:`, `javascript:`, and custom schemes are always rejected.
 - No API keys are hardcoded. AI requests are proxied through the signed-in
-  account by default; user-supplied keys stay in the OS-level settings store.
+  account by default. The Opis custom-provider feature stores a user-supplied
+  key in the local Electron user-data settings file; it is not an OS keychain
+  or a guarantee of encrypted storage. Users should protect the device, avoid
+  sharing the settings file, and rotate keys if they may have been exposed.
+
+Custom-provider users should assume that prompts and attachments may be sent to
+the endpoint they configure. They are responsible for selecting a provider
+whose terms, privacy controls, and data-processing arrangements are suitable
+for the material they submit.
 
 ## Threat Model: AI-Generated Layout Scripts (slides)
 

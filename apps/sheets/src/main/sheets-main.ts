@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { createHash, randomUUID } from 'node:crypto'
 import {
   createReadStream,
@@ -24,6 +30,7 @@ import {
   session as electronSession,
   shell,
   systemPreferences,
+  webContents,
   WebContentsView,
 } from 'electron'
 import type {
@@ -2109,9 +2116,8 @@ export function registerSheetsAiIpc(): void {
     sessionFor(event)
     const stored = readJson<Partial<AiSettings> & LegacyAiSettings>(SETTINGS_PATH(), {})
     const settings = resolveAiSettings(stored, defaultAiSettings())
-    // AI features all go through Genspark (gsk login); legacy settings that chose
-    // another provider are reset
-    settings.provider = 'genspark'
+    // Preserve the selected provider. Genspark uses gsk login; custom providers
+    // use their stored key or NEURALWATT_API_KEY in the main-process environment.
     return settings
   })
 
@@ -2135,6 +2141,9 @@ export function registerSheetsAiIpc(): void {
     sessionFor(event)
     const settings = aiSettingsInputSchema.parse(input)
     writeJson(SETTINGS_PATH(), settings)
+    for (const contents of webContents.getAllWebContents()) {
+      if (!contents.isDestroyed()) contents.send('ai:settings-changed')
+    }
   })
 
   ipcMain.handle(IPC_CHANNELS.aiChat, async (event, input: unknown) => {
@@ -2144,6 +2153,10 @@ export function registerSheetsAiIpc(): void {
     let config = request.settings.providers[provider]
     if (provider === 'genspark' && config && !config.apiKey) {
       config = { ...config, apiKey: gskApiKey() }
+    }
+    if (provider === 'custom' && config && !config.apiKey) {
+      const apiKey = process.env.NEURALWATT_API_KEY?.trim()
+      if (apiKey) config = { ...config, apiKey }
     }
     if (!config?.apiKey) {
       return {
@@ -2171,6 +2184,10 @@ export function registerSheetsAiIpc(): void {
     // login state per request
     if (provider === 'genspark' && config && !config.apiKey) {
       config = { ...config, apiKey: gskApiKey() }
+    }
+    if (provider === 'custom' && config && !config.apiKey) {
+      const apiKey = process.env.NEURALWATT_API_KEY?.trim()
+      if (apiKey) config = { ...config, apiKey }
     }
     const send = (chunk: AiStreamChunk) => {
       if (!event.sender.isDestroyed()) event.sender.send(IPC_CHANNELS.aiStreamChunk, chunk)
@@ -2701,8 +2718,15 @@ async function prepareWorkbookForOpen(
 /** shell-injected items appended to the File menu (e.g. Back to Home) */
 let extraFileMenuItems: MenuItemConstructorOptions[] = []
 
+/** shell-injected items appended to the Tools menu (e.g. AI provider settings) */
+let extraToolsMenuItems: MenuItemConstructorOptions[] = []
+
 export function setSheetsExtraFileMenuItems(items: MenuItemConstructorOptions[]): void {
   extraFileMenuItems = items
+}
+
+export function setSheetsExtraToolsMenuItems(items: MenuItemConstructorOptions[]): void {
+  extraToolsMenuItems = items
 }
 
 /** tab mode: closes the sheets tab instead of the whole shell window (Cmd+W / role:'close') */
@@ -2780,6 +2804,9 @@ function installApplicationMenu(): void {
           { role: 'selectAll', label: labels.selectAll },
         ],
       },
+      ...(extraToolsMenuItems.length > 0
+        ? [{ label: 'Tools', submenu: extraToolsMenuItems }]
+        : []),
       viewMenuTemplate(labels),
       windowMenuTemplate(process.platform, labels),
     ]),

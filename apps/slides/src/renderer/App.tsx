@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type {
   GroupRenderNode,
@@ -880,6 +886,14 @@ export function App() {
   useEffect(() => {
     void window.slidesApi.getAiSettings().then(setAiSettings)
   }, [])
+
+  useEffect(
+    () =>
+      window.slidesApi.onAiSettingsChanged(() => {
+        void window.slidesApi.getAiSettings().then(setAiSettings)
+      }),
+    [],
+  )
 
   // Recent files for the start screen
   useEffect(() => {

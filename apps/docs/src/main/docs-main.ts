@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { createHash } from 'node:crypto'
 import {
   existsSync,
@@ -10,7 +16,16 @@ import {
 } from 'node:fs'
 import { copyFile, mkdir, readFile, readdir, stat, unlink } from 'node:fs/promises'
 import { basename, join } from 'node:path'
-import { BrowserWindow, Menu, WebContentsView, app, dialog, ipcMain, shell } from 'electron'
+import {
+  BrowserWindow,
+  Menu,
+  WebContentsView,
+  app,
+  dialog,
+  ipcMain,
+  shell,
+  webContents,
+} from 'electron'
 import {
   appMenuLabels,
   contextMenuLabels,
@@ -2477,8 +2492,8 @@ export function registerAiIpc(): void {
   ipcMain.handle('ai:get-settings', (): AiSettings => {
     const stored = readJson<Partial<AiSettings> & LegacyAiSettings>(SETTINGS_PATH(), {})
     const settings = resolveAiSettings(stored, defaultAiSettings())
-    // AI features all go through Genspark (gsk login); legacy settings with another provider are reset
-    settings.provider = 'genspark'
+    // Preserve the selected provider. Genspark uses gsk login; custom providers
+    // use their stored key or NEURALWATT_API_KEY in the main-process environment.
     return settings
   })
 
@@ -2499,6 +2514,9 @@ export function registerAiIpc(): void {
 
   ipcMain.handle('ai:set-settings', (_event, settings: AiSettings) => {
     writeJson(SETTINGS_PATH(), settings)
+    for (const contents of webContents.getAllWebContents()) {
+      if (!contents.isDestroyed()) contents.send('ai:settings-changed')
+    }
   })
 
   ipcMain.handle('ai:stream', async (event, request: AiStreamRequest) => {
@@ -2510,6 +2528,10 @@ export function registerAiIpc(): void {
     // the genspark key never enters the settings file; requests take it from the gsk login state
     if (provider === 'genspark' && config && !config.apiKey) {
       config = { ...config, apiKey: gskApiKey() }
+    }
+    if (provider === 'custom' && config && !config.apiKey) {
+      const apiKey = process.env.NEURALWATT_API_KEY?.trim()
+      if (apiKey) config = { ...config, apiKey }
     }
     const send = (chunk: AiStreamChunk) => {
       if (!event.sender.isDestroyed()) event.sender.send('ai:stream-chunk', chunk)
@@ -2619,6 +2641,10 @@ export function registerAiIpc(): void {
     let config = settings.providers?.[provider]
     if (provider === 'genspark' && config && !config.apiKey) {
       config = { ...config, apiKey: gskApiKey() }
+    }
+    if (provider === 'custom' && config && !config.apiKey) {
+      const apiKey = process.env.NEURALWATT_API_KEY?.trim()
+      if (apiKey) config = { ...config, apiKey }
     }
     if (!config?.apiKey) {
       return {
@@ -3242,8 +3268,15 @@ function sendCommand(command: MenuCommand, payload?: string): void {
  * across the internal rebuilds pushRecent() triggers */
 let extraFileMenuItems: MenuItemConstructorOptions[] = []
 
+/** shell-injected items appended to the Tools menu (e.g. AI provider settings) */
+let extraToolsMenuItems: MenuItemConstructorOptions[] = []
+
 export function setDocsExtraFileMenuItems(items: MenuItemConstructorOptions[]): void {
   extraFileMenuItems = items
+}
+
+export function setDocsExtraToolsMenuItems(items: MenuItemConstructorOptions[]): void {
+  extraToolsMenuItems = items
 }
 
 /** Shell-installed gate: inside the shell the docs menu may only take over the
@@ -3439,6 +3472,9 @@ export function buildDocsMenu(): void {
       label: tm('menuTools'),
       submenu: [
         { label: tm('menuWordCount'), click: () => sendCommand('word-count') },
+        ...(extraToolsMenuItems.length > 0
+          ? [{ type: 'separator' as const }, ...extraToolsMenuItems]
+          : []),
         { type: 'separator' },
         { label: tm('menuSpelling'), enabled: false },
         { label: tm('menuMacros'), enabled: false },

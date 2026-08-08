@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import type { AiProviderId, AiProviderMeta, AiSettings, LegacyAiSettings } from './types'
 
 /**
@@ -17,6 +23,12 @@ export const GENSPARK_LLM_BASE_URLS = {
  * Genspark proxy — never to direct vendor APIs.
  */
 export const GENSPARK_AGENT_TYPE = 'genoffice'
+
+/** Defaults for the fork's custom OpenAI-compatible provider. */
+export const NEURALWATT_CUSTOM_PROVIDER = {
+  baseUrl: 'https://api.neuralwatt.com/v1',
+  model: 'deepseek-v4-flash',
+} as const
 
 export function gensparkAttributionHeaders(baseUrl?: string): Record<string, string> {
   return baseUrl?.startsWith('https://www.genspark.ai')
@@ -79,10 +91,10 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
   },
   {
     id: 'custom',
-    label: 'Custom',
-    models: [],
-    defaultModel: '',
-    keyPlaceholder: 'API Key',
+    label: 'Neuralwatt Cloud',
+    models: [NEURALWATT_CUSTOM_PROVIDER.model],
+    defaultModel: NEURALWATT_CUSTOM_PROVIDER.model,
+    keyPlaceholder: 'Neuralwatt API key',
     needsBaseUrl: true,
   },
 ]
@@ -101,10 +113,15 @@ export function defaultAiSettings(
     providers[meta.id] = {
       apiKey: defaultApiKeys?.[meta.id] ?? '',
       model: meta.defaultModel,
-      baseUrl: meta.needsBaseUrl ? '' : undefined,
+      baseUrl:
+        meta.id === 'custom'
+          ? NEURALWATT_CUSTOM_PROVIDER.baseUrl
+          : meta.needsBaseUrl
+            ? ''
+            : undefined,
     }
   }
-  return { provider: 'genspark', providers }
+  return { provider: 'custom', providers }
 }
 
 /**
@@ -122,7 +139,7 @@ export function resolveAiSettings(
       defaults.providers.custom = {
         apiKey: stored.apiKey,
         model: stored.model ?? '',
-        baseUrl: stored.baseUrl ?? 'https://api.openai.com/v1',
+        baseUrl: stored.baseUrl ?? NEURALWATT_CUSTOM_PROVIDER.baseUrl,
       }
     }
     return defaults

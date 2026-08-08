@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { spawn } from 'node:child_process'
 import {
   copyFileSync,
@@ -80,6 +86,7 @@ import {
   toggleStarredFile,
   registerDocsIpc,
   setDocsExtraFileMenuItems,
+  setDocsExtraToolsMenuItems,
   setDocsMenuGate,
   setDocsShellHooks,
   projectFileRenamed,
@@ -103,6 +110,7 @@ import {
   setForcedWorkbookPath,
   setSheetsCloseTabHook,
   setSheetsExtraFileMenuItems,
+  setSheetsExtraToolsMenuItems,
   setSheetsShellWindow,
   setSheetsWorkbookOpenedHook,
   startSheetsCaptureServer,
@@ -115,6 +123,7 @@ import {
   requestSlidesClose,
   setSlidesCloseTabHook,
   setSlidesExtraFileMenuItems,
+  setSlidesExtraToolsMenuItems,
   setSlidesOpenedHook,
   setSlidesShellWindow,
   slidesFileRenamed,
@@ -1308,6 +1317,64 @@ const tm = (key: Parameters<typeof tMain>[1], params?: Parameters<typeof tMain>[
 
 let shellWindow: BrowserWindow | null = null
 let tabManager: TabManager | null = null
+let aiProviderSettingsWindow: BrowserWindow | null = null
+
+function openAiProviderSettings(): void {
+  if (aiProviderSettingsWindow && !aiProviderSettingsWindow.isDestroyed()) {
+    aiProviderSettingsWindow.show()
+    aiProviderSettingsWindow.focus()
+    return
+  }
+
+  const parent = shellWindow && !shellWindow.isDestroyed() ? shellWindow : undefined
+  const win = new BrowserWindow({
+    width: 620,
+    height: 690,
+    minWidth: 500,
+    minHeight: 560,
+    title: 'AI Provider Settings',
+    parent,
+    modal: Boolean(parent),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  })
+  aiProviderSettingsWindow = win
+  win.on('closed', () => {
+    if (aiProviderSettingsWindow === win) aiProviderSettingsWindow = null
+  })
+
+  const devUrl = process.env.ELECTRON_RENDERER_URL
+  if (devUrl) {
+    const url = new URL(devUrl)
+    url.searchParams.set('window', 'ai-provider-settings')
+    void win.loadURL(url.toString())
+  } else {
+    void win.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { window: 'ai-provider-settings' },
+    })
+  }
+}
+
+function aiProviderSettingsMenuItem(): MenuItemConstructorOptions {
+  return {
+    label:
+      currentLang() === 'zh' || currentLang() === 'zh-TW'
+        ? 'AI 供应商设置…'
+        : 'AI Provider Settings…',
+    click: openAiProviderSettings,
+  }
+}
+
+function aiToolsMenu(): MenuItemConstructorOptions {
+  return {
+    label: currentLang() === 'zh' || currentLang() === 'zh-TW' ? '工具' : 'Tools',
+    submenu: [aiProviderSettingsMenuItem()],
+  }
+}
 
 /**
  * When the user creates a file from a specific project view, remember which
@@ -2115,6 +2182,7 @@ function buildHomeMenu(): void {
       ],
     },
     editMenuTemplate(process.platform, appMenuLabels(currentLang())),
+    aiToolsMenu(),
     windowMenuTemplate(process.platform, appMenuLabels(currentLang())),
     {
       role: 'help',
@@ -2173,6 +2241,7 @@ function buildPdfMenu(): void {
       ],
     },
     editMenuTemplate(process.platform, appMenuLabels(currentLang())),
+    aiToolsMenu(),
     windowMenuTemplate(process.platform, appMenuLabels(currentLang())),
     {
       role: 'help',
@@ -2251,6 +2320,7 @@ function buildMarkdownMenu(): void {
       ],
     },
     editMenuTemplate(process.platform, appMenuLabels(currentLang())),
+    aiToolsMenu(),
     windowMenuTemplate(process.platform, appMenuLabels(currentLang())),
     {
       role: 'help',
@@ -2418,6 +2488,9 @@ function installBackToHomeItems(): void {
   setDocsExtraFileMenuItems([backToHomeItem])
   setSheetsExtraFileMenuItems([backToHomeItem])
   setSlidesExtraFileMenuItems([backToHomeItem])
+  setDocsExtraToolsMenuItems([aiProviderSettingsMenuItem()])
+  setSheetsExtraToolsMenuItems([aiProviderSettingsMenuItem()])
+  setSlidesExtraToolsMenuItems([aiProviderSettingsMenuItem()])
 }
 
 function installDockMenu(): void {

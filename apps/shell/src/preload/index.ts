@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { contextBridge, ipcRenderer } from 'electron'
 import type { IpcRendererEvent } from 'electron'
 import type {
@@ -13,6 +19,7 @@ import type {
   TimelineEntryItem,
   UiLanguage,
 } from '../shared/home-api'
+import type { AiSettings } from '@genoffice/ai-provider'
 import { HOME_CHANNELS, PROJECT_CHANNELS } from '../shared/home-api'
 import type { TabsApi, TabSummary } from '../shared/tabs-api'
 import { TABS_CHANNELS } from '../shared/tabs-api'
@@ -169,6 +176,13 @@ const homeApi: HomeApi = {
   },
   async openGenTeam() {
     await ipcRenderer.invoke(HOME_CHANNELS.openGenTeam)
+  },
+  async getAiSettings() {
+    const result: unknown = await ipcRenderer.invoke('ai:get-settings')
+    return result as AiSettings
+  },
+  async setAiSettings(settings: AiSettings) {
+    await ipcRenderer.invoke('ai:set-settings', settings)
   },
   async cloudProjectsCached() {
     const result: unknown = await ipcRenderer.invoke(HOME_CHANNELS.cloudProjectsCached)

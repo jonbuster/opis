@@ -1,10 +1,16 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 /**
  * AI IPC for the slides main process, extracted from slides-main.ts:
  * settings persistence, the streaming proxy (main process does the networking
  * to avoid renderer CORS), search tools, and the slides-only ai:* channels
  * (image generation, media analysis, style templates).
  */
-import { app, ipcMain, shell } from 'electron'
+import { app, ipcMain, shell, webContents } from 'electron'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
@@ -59,8 +65,8 @@ export function registerAiIpc(): void {
   ipcMain.handle('ai:get-settings', (): AiSettings => {
     const stored = readJson<Partial<AiSettings> & LegacyAiSettings>(AI_SETTINGS_PATH(), {})
     const settings = resolveAiSettings(stored, defaultAiSettings())
-    // AI features all go through Genspark (gsk login); stored settings that chose another provider are normalized back
-    settings.provider = 'genspark'
+    // Preserve the selected provider. Genspark uses gsk login; custom providers
+    // use their stored key or NEURALWATT_API_KEY in the main-process environment.
     return settings
   })
 
@@ -81,6 +87,9 @@ export function registerAiIpc(): void {
 
   ipcMain.handle('ai:set-settings', (_event, settings: AiSettings) => {
     writeJson(AI_SETTINGS_PATH(), settings)
+    for (const contents of webContents.getAllWebContents()) {
+      if (!contents.isDestroyed()) contents.send('ai:settings-changed')
+    }
   })
 
   ipcMain.handle('ai:stream', async (event, request: AiStreamRequest) => {
@@ -92,6 +101,10 @@ export function registerAiIpc(): void {
     // The genspark key never enters the settings file; it is fetched from the gsk login state per request
     if (provider === 'genspark' && config && !config.apiKey) {
       config = { ...config, apiKey: gskApiKey() }
+    }
+    if (provider === 'custom' && config && !config.apiKey) {
+      const apiKey = process.env.NEURALWATT_API_KEY?.trim()
+      if (apiKey) config = { ...config, apiKey }
     }
     const send = (chunk: AiStreamChunk) => {
       if (!event.sender.isDestroyed()) event.sender.send('ai:stream-chunk', chunk)

@@ -1,15 +1,26 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { describe, expect, it } from 'vitest'
-import { AI_PROVIDERS, defaultAiSettings, resolveAiSettings } from '../src/providers'
+import {
+  AI_PROVIDERS,
+  NEURALWATT_CUSTOM_PROVIDER,
+  defaultAiSettings,
+  resolveAiSettings,
+} from '../src/providers'
 
 describe('defaultAiSettings', () => {
   it('gives every provider its default model and an empty key by default', () => {
     const settings = defaultAiSettings()
-    expect(settings.provider).toBe('genspark')
+    expect(settings.provider).toBe('custom')
     for (const meta of AI_PROVIDERS) {
       expect(settings.providers[meta.id].apiKey).toBe('')
       expect(settings.providers[meta.id].model).toBe(meta.defaultModel)
     }
-    expect(settings.providers.custom.baseUrl).toBe('')
+    expect(settings.providers.custom.baseUrl).toBe(NEURALWATT_CUSTOM_PROVIDER.baseUrl)
     expect(settings.providers.anthropic.baseUrl).toBeUndefined()
   })
 
@@ -41,9 +52,9 @@ describe('resolveAiSettings', () => {
     expect(resolved.providers.anthropic).toEqual(defaults.providers.anthropic)
   })
 
-  it('defaults the legacy base URL to the OpenAI endpoint when omitted', () => {
+  it('defaults the legacy base URL to the Neuralwatt endpoint when omitted', () => {
     const resolved = resolveAiSettings({ apiKey: 'legacy-key' }, defaultAiSettings())
-    expect(resolved.providers.custom.baseUrl).toBe('https://api.openai.com/v1')
+    expect(resolved.providers.custom.baseUrl).toBe(NEURALWATT_CUSTOM_PROVIDER.baseUrl)
   })
 
   it('merges stored multi-provider settings over the defaults, provider by provider', () => {

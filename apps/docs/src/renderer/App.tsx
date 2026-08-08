@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -23,7 +29,7 @@ import {
   type ThemeFonts,
 } from '@genoffice/docx-engine'
 import type { AiSettings, OpenFileResult } from '../shared/ipc'
-import { AI_PROVIDERS } from '../shared/ipc'
+import { AI_PROVIDERS, NEURALWATT_CUSTOM_PROVIDER } from '../shared/ipc'
 import { AiPanel } from './ai/AiPanel'
 import { asianCharCount, countWords, nonAsianWordCount } from './word-count'
 import { toRoman } from './note-format'
@@ -264,11 +270,20 @@ interface DocStats {
 }
 
 const DEFAULT_SETTINGS: AiSettings = {
-  provider: 'anthropic',
+  provider: 'custom',
   providers: Object.fromEntries(
     AI_PROVIDERS.map((p) => [
       p.id,
-      { apiKey: '', model: p.defaultModel, baseUrl: p.needsBaseUrl ? '' : undefined },
+      {
+        apiKey: '',
+        model: p.defaultModel,
+        baseUrl:
+          p.id === 'custom'
+            ? NEURALWATT_CUSTOM_PROVIDER.baseUrl
+            : p.needsBaseUrl
+              ? ''
+              : undefined,
+      },
     ]),
   ) as AiSettings['providers'],
 }
@@ -601,6 +616,14 @@ export function App() {
     void window.desktop.getRecentFiles().then(setRecent)
     void window.desktop.getAiSettings().then(setSettings)
   }, [])
+
+  useEffect(
+    () =>
+      window.desktop.onAiSettingsChanged(() => {
+        void window.desktop.getAiSettings().then(setSettings)
+      }),
+    [],
+  )
 
   useEffect(() => {
     localStorage.setItem('aidocs.showAi', showAi ? '1' : '0')

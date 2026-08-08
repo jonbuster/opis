@@ -12,3 +12,11 @@ checkout.
 
 Bundled fonts and their licenses are documented in
 apps/docs/src/renderer/fonts/README.md.
+
+Opis fork attribution
+Copyright 2026 Opis contributors
+
+This repository contains modifications and additions made for the unofficial
+Opis fork. Opis is not affiliated with, endorsed by, or sponsored by Mainfunc,
+Inc., GenOffice, or Genspark. This addendum does not replace or modify the
+upstream notices above.

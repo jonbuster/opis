@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { IpcRendererEvent } from 'electron'
 import type { ProjectApi } from '@genoffice/project-store'
@@ -265,6 +271,11 @@ const api: SlidesApi = {
   },
   getAiSettings: () => ipcRenderer.invoke('ai:get-settings'),
   setAiSettings: (settings: AiSettings) => ipcRenderer.invoke('ai:set-settings', settings),
+  onAiSettingsChanged: (handler: () => void) => {
+    const listener = () => handler()
+    ipcRenderer.on('ai:settings-changed', listener)
+    return () => ipcRenderer.removeListener('ai:settings-changed', listener)
+  },
   aiStream: (request: AiStreamRequest) => ipcRenderer.invoke('ai:stream', request),
   aiStreamCancel: (requestId: string) => ipcRenderer.invoke('ai:stream-cancel', requestId),
   aiGskStatus: (withEmail?: boolean) => ipcRenderer.invoke('ai:gsk-status', withEmail),

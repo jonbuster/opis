@@ -1,4 +1,9 @@
-# GenOffice
+# Opis
+
+> **Unofficial fork notice:** Opis is an independent fork of GenOffice. It is
+> not affiliated with, endorsed by, or sponsored by Mainfunc, Inc., GenOffice,
+> or Genspark. See [FORK-NOTICE.md](FORK-NOTICE.md) for attribution,
+> licensing, branding, and distribution requirements.
 
 An AI-native office suite for macOS and Windows: word processor, spreadsheet,
 presentations, PDF, and Markdown — six Electron apps sharing one engine layer,
@@ -8,7 +13,11 @@ built around AI editing as a first-class workflow rather than a bolted-on chat b
 
 [Watch the demo video on YouTube](https://www.youtube.com/watch?v=B2pLdMX95v4)
 
-## Download
+## Downloads
+
+Opis does not currently publish official release artifacts from this repository.
+The links below are upstream GenOffice builds for reference only; they are not
+Opis releases and are not endorsed by this fork.
 
 | Platform                        | Requirements                                | Download                                                                                                                             |
 | ------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -52,8 +61,12 @@ Every app embeds the same AI panel: block-granular AI editing with version
 snapshots and diffs in docs, a tool-calling agent over workbook/slide/PDF
 state in the others.
 
-**AI providers.** The apps sign in to a Genspark account and route model
-calls through the Genspark service side; no model API key is stored locally.
+**AI providers.** The upstream Genspark integration remains available. This
+fork also supports user-configured custom OpenAI-compatible endpoints. A key
+entered by a user is stored in the local Electron user-data settings file and
+is not included in the source tree or release artifacts by default. Review the
+selected provider's terms and privacy policy before sending documents or other
+sensitive content.
 
 ## Engine packages
 
@@ -123,12 +136,20 @@ AI-generated content.
 MIT/Apache-2.0/OFL, and the bundled fonts (Liberation, Carlito, Caladea, Noto
 CJK subsets) are OFL/Apache.
 
+## Fork and attribution
+
+Opis contains modified and newly added files based on GenOffice. The original
+GenOffice copyright, Apache-2.0 license, `NOTICE`, and third-party attribution
+notices are retained. Modified files carry a `MODIFIED FILE NOTICE`; see
+[FORK-NOTICE.md](FORK-NOTICE.md) for the scope of this fork and release notes.
+
 ## License
 
-GenOffice is licensed under the [Apache License 2.0](LICENSE), with one
-exception: the `ee/` directory is reserved for future enterprise modules and
-is covered by the [GenOffice Enterprise License](ee/LICENSE).
+The Apache-2.0 portions of Opis are based on GenOffice and remain licensed
+under the [Apache License 2.0](LICENSE). The `ee/` directory is a separate
+enterprise-licensed area and is not covered by Apache-2.0; see [ee/LICENSE](ee/LICENSE).
 
 The GenOffice and Genspark names and logos are trademarks of Mainfunc, Inc.
 The Apache-2.0 license does not grant permission to use them (see section 6);
-forks should use their own branding.
+Opis releases should use their own branding and must not imply official
+association with Mainfunc, GenOffice, or Genspark.

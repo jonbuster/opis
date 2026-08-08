@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import {
   AgentLoop,
@@ -1182,22 +1188,24 @@ export function AiPanel({
             }
             return next
           })
-          // Signed-out failures get an inline sign-in button; detected via
-          // gsk status rather than matching the localized error text
-          void window.slidesApi
-            .aiGskStatus()
-            .then((status) => {
-              if (status.loggedIn) return
-              setChat((prev) => {
-                const next = [...prev]
-                const last = next.at(-1)
-                if (last?.role === 'assistant' && last.error) {
-                  next[next.length - 1] = { ...last, loginRequired: true }
-                }
-                return next
+          // Only Genspark failures can be resolved by the Genspark sign-in flow;
+          // custom-provider failures should remain ordinary provider errors.
+          if (settingsRef.current?.provider === 'genspark') {
+            void window.slidesApi
+              .aiGskStatus()
+              .then((status) => {
+                if (status.loggedIn) return
+                setChat((prev) => {
+                  const next = [...prev]
+                  const last = next.at(-1)
+                  if (last?.role === 'assistant' && last.error) {
+                    next[next.length - 1] = { ...last, loginRequired: true }
+                  }
+                  return next
+                })
               })
-            })
-            .catch(() => {})
+              .catch(() => {})
+          }
           void finishHistoryBatch().finally(() => setBusy(false))
         },
       },

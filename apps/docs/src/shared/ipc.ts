@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 export interface OpenFileResult {
   path: string
   name: string
@@ -36,7 +42,7 @@ export type {
   AiStreamRequest,
   GenSparkAccountStatus,
 } from '@genoffice/ai-provider'
-export { AI_PROVIDERS } from '@genoffice/ai-provider'
+export { AI_PROVIDERS, NEURALWATT_CUSTOM_PROVIDER } from '@genoffice/ai-provider'
 
 // ---- agent protocol: canonical types live in @genoffice/agent-core ----
 
@@ -175,6 +181,8 @@ export interface DesktopApi {
   pickImage(): Promise<PickImageResult | null>
   getAiSettings(): Promise<AiSettings>
   setAiSettings(settings: AiSettings): Promise<void>
+  /** settings changed in another window (for example the shell settings dialog) */
+  onAiSettingsChanged(handler: () => void): () => void
   /** system print dialog for the current window */
   print(): Promise<void>
   /** render the document to PDF and ask where to save; size in twips.

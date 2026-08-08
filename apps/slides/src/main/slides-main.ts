@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 /**
  * GenOffice Slides main process — pptx parsing/render-tree building/edit application/saving all live
  * here (Node side). The renderer only gets plain-data RenderSlide; edit intents are sent back
@@ -3796,8 +3802,14 @@ export function createSlidesView(openPath?: string | null): WebContentsView {
 
 /** Items the shell injects into the File menu (e.g. Back to Home) */
 let extraFileMenuItems: Electron.MenuItemConstructorOptions[] = []
+/** Items the shell injects into the Tools menu (e.g. AI provider settings) */
+let extraToolsMenuItems: Electron.MenuItemConstructorOptions[] = []
 export function setSlidesExtraFileMenuItems(items: Electron.MenuItemConstructorOptions[]): void {
   extraFileMenuItems = items
+}
+
+export function setSlidesExtraToolsMenuItems(items: Electron.MenuItemConstructorOptions[]): void {
+  extraToolsMenuItems = items
 }
 
 /** Tab mode: Cmd+W closes the current tab rather than the whole shell window */
@@ -3858,6 +3870,9 @@ export function buildSlidesMenu(): Menu {
         { role: 'selectAll', label: labels.selectAll },
       ],
     },
+    ...(extraToolsMenuItems.length > 0
+      ? [{ label: 'Tools', submenu: extraToolsMenuItems }]
+      : []),
     {
       label: tm('menuView'),
       submenu: [

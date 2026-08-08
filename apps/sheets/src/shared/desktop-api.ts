@@ -1,3 +1,9 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import { z } from 'zod'
 
 import { ADDABLE_SHAPE_TYPES } from './shape-types'
@@ -1945,6 +1951,8 @@ export interface DesktopApi {
   hasQueuedWorkbook(): Promise<boolean>
   getAiSettings(): Promise<AiSettings>
   setAiSettings(settings: AiSettings): Promise<void>
+  /// Settings changed in another window (for example the shell settings dialog).
+  onAiSettingsChanged(handler: () => void): () => void
   aiChat(request: AiChatRequest): Promise<AiChatResponse>
   /// start a streaming AI call; deltas arrive via onAiStream with the same requestId
   aiStream(request: AiStreamRequest): Promise<void>

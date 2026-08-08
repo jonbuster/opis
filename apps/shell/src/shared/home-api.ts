@@ -1,4 +1,11 @@
+/*
+ * MODIFIED FILE NOTICE: This file was modified in the Opis fork of GenOffice.
+ * Original work: GenOffice, Copyright 2026 Mainfunc, Inc.
+ * See LICENSE, NOTICE, and FORK-NOTICE.md for licensing and attribution.
+ */
+
 import type { UpdateChannel } from './update-api'
+import type { AiSettings } from '@genoffice/ai-provider'
 
 /** UI language; kept self-contained here (mirrors Lang in @genoffice/i18n) */
 export type UiLanguage =
@@ -120,6 +127,10 @@ export interface HomeApi {
   setTheme(theme: UiTheme): Promise<void>
   /** open the GenTeam community page in the default browser */
   openGenTeam(): Promise<void>
+  /** current custom/OpenAI-compatible provider settings */
+  getAiSettings(): Promise<AiSettings>
+  /** persist custom/OpenAI-compatible provider settings */
+  setAiSettings(settings: AiSettings): Promise<void>
   /** locally stored full cloud project list (instant; null when no store or logged out) */
   cloudProjectsCached(): Promise<CloudProjectsSnapshot | null>
   /** sync the full list from Genspark and return it (1 request when nothing changed); null when the sync failed */
